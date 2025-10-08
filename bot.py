@@ -7,7 +7,7 @@ import subprocess
 # ==== НАСТРОЙКИ ====
 BOT_TOKEN = '7635605099:AAG32j38TXsPk2q4x9uNUuqZ_57wTavTK1U'
 ADMIN_ID = 123456789  # Telegram ID администратора
-RCON_COMMAND = './RustDedicated -rcon.port 28016 -rcon.password "YOUR_PASSWORD"'  # Пример запуска, не используется напрямую
+RCON_COMMAND = './RustDedicated -rcon.port 20602 -rcon.password "YOUR_PASSWORD"'  # Пример запуска, не используется напрямую
 
 # Логирование
 logging.basicConfig(level=logging.INFO)
@@ -26,7 +26,7 @@ async def handle_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 question_id = id_line.split(":")[-1].strip().replace("<code>", "").replace("</code>", "")
 
                 # Подключаемся к RCON
-                with RCON(("37.230.137.6", 20600), "YOUR_RCON_PASSWORD") as rcon:
+                with RCON(("37.230.137.6", 20602), "Derso250499") as rcon:
                     cmd = f"say Ответ администрации на вопрос {question_id}: {text}"
                     rcon.execute(cmd)
                     rcon.execute(f"ask.reply {question_id} {text}")
@@ -49,5 +49,6 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
 

@@ -1,19 +1,14 @@
-import os
-import logging
 from telegram import Update
 from telegram.ext import ApplicationBuilder, MessageHandler, filters, ContextTypes
-import subprocess
+from valve.rcon import RCON  # <-- Python RCON клиент
 
-# ==== НАСТРОЙКИ ====
+# ========== НАСТРОЙКИ ==========
 BOT_TOKEN = '7635605099:AAG32j38TXsPk2q4x9uNUuqZ_57wTavTK1U'
-ADMIN_ID = 123456789  # Telegram ID администратора
-RCON_COMMAND = './RustDedicated -rcon.port 20602 -rcon.password "YOUR_PASSWORD"'  # Пример запуска, не используется напрямую
-
-# Логирование
-logging.basicConfig(level=logging.INFO)
-
-# === Хэндлер для ответов на сообщения с ID ===
-from valve.rcon import RCON
+ADMIN_ID = 123456789  # ← твой Telegram ID (число)
+RCON_HOST = '37.230.137.6'
+RCON_PORT = 20602
+RCON_PASSWORD = 'Derso250499'
+# ===============================
 
 async def handle_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.message.reply_to_message:
@@ -22,25 +17,24 @@ async def handle_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if '🆔' in original:
             try:
+                # Получаем ID вопроса из сообщения
                 id_line = [line for line in original.splitlines() if "🆔" in line][0]
                 question_id = id_line.split(":")[-1].strip().replace("<code>", "").replace("</code>", "")
 
-                # Подключаемся к RCON
-                with RCON(("37.230.137.6", 20602), "Derso250499") as rcon:
-                    cmd = f"say Ответ администрации на вопрос {question_id}: {text}"
-                    rcon.execute(cmd)
-                    rcon.execute(f"ask.reply {question_id} {text}")
+                # Подключаемся к RCON и отправляем команду
+                with RCON((RCON_HOST, RCON_PORT), RCON_PASSWORD) as rcon:
+                    cmd = f'ask.reply {question_id} {text}'
+                    response = rcon.execute(cmd)
 
-                await update.message.reply_text("✅ Ответ отправлен в Rust.")
+                await update.message.reply_text("✅ Ответ отправлен игроку.")
             except Exception as e:
-                print(f"Ошибка: {e}")
                 await update.message.reply_text(f"❌ Ошибка обработки: {e}")
+                print(f"[ERROR] {e}")
         else:
             await update.message.reply_text("⚠️ В оригинальном сообщении нет ID вопроса.")
     else:
         await update.message.reply_text("⚠️ Ответь на сообщение с вопросом.")
 
-# === Запуск ===
 def main():
     app = ApplicationBuilder().token(BOT_TOKEN).build()
     app.add_handler(MessageHandler(filters.TEXT & filters.REPLY, handle_reply))
@@ -49,6 +43,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-

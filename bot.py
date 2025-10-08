@@ -13,6 +13,8 @@ RCON_COMMAND = './RustDedicated -rcon.port 28016 -rcon.password "YOUR_PASSWORD"'
 logging.basicConfig(level=logging.INFO)
 
 # === Хэндлер для ответов на сообщения с ID ===
+from valve.rcon import RCON
+
 async def handle_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if update.message.reply_to_message:
         text = update.message.text
@@ -23,14 +25,16 @@ async def handle_reply(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 id_line = [line for line in original.splitlines() if "🆔" in line][0]
                 question_id = id_line.split(":")[-1].strip().replace("<code>", "").replace("</code>", "")
 
-                # Отправим через RCON или локально
-                rcon_cmd = f"say Executing reply... && ask.reply {question_id} {text}"
-                subprocess.call(["rcon", "-P", "28016", "-p", "YOUR_PASSWORD", "-c", rcon_cmd])
+                # Подключаемся к RCON
+                with RCON(("37.230.137.6", 20600), "YOUR_RCON_PASSWORD") as rcon:
+                    cmd = f"say Ответ администрации на вопрос {question_id}: {text}"
+                    rcon.execute(cmd)
+                    rcon.execute(f"ask.reply {question_id} {text}")
 
                 await update.message.reply_text("✅ Ответ отправлен в Rust.")
             except Exception as e:
-                logging.error(f"Ошибка: {e}")
-                await update.message.reply_text("❌ Ошибка обработки.")
+                print(f"Ошибка: {e}")
+                await update.message.reply_text(f"❌ Ошибка обработки: {e}")
         else:
             await update.message.reply_text("⚠️ В оригинальном сообщении нет ID вопроса.")
     else:
@@ -45,4 +49,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 
